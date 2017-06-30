@@ -1,1 +1,1 @@
-# aws_scripts
+These are scripts written for use with Amazon Web Service's `aws` command line tool.
