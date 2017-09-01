@@ -22,7 +22,7 @@ do
       cidr_ip="$ip/32"
   fi
   echo "Adding $cidr_ip for $protocol port $tcp_port to security group $security_group_id"
-  aws ec2 authorize-security-group-ingress --protocol "$protocol" --port "$tcp_port" --cidr "cidr_ip" --group-id "$security_group_id"
+  aws ec2 authorize-security-group-ingress --protocol "$protocol" --port "$tcp_port" --cidr "$cidr_ip" --group-id "$security_group_id"
 done
 
 }
