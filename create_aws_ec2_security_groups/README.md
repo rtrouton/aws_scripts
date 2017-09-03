@@ -1,0 +1,1 @@
+This script sets up security groups for a specified VPC in AWS. Rules are set to the default configuration when created.
