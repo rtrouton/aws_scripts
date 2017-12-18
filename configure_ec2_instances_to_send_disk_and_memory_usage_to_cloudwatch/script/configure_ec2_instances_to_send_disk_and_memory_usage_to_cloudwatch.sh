@@ -33,7 +33,7 @@ if [[ -f CloudWatchMonitoringScripts-1.2.1.zip ]]; then
 
     # Export new crontab entry to exported crontab file
 
-    /bin/echo "*/5 * * * * /opt/aws-scripts-mon/mon-put-instance-data.pl --mem-util --mem-used --mem-avail --swap-util --swap-used --disk-path=/ --disk-space-util --disk-space-used --disk-space-avail --from-cron" >> "$temp_crontab"
+    /bin/echo "*/5 * * * * /opt/aws-scripts-mon/mon-put-instance-data.pl --mem-util --mem-used --mem-avail --swap-util --swap-used --disk-path=/ --disk-space-util --disk-space-used --disk-space-avail --memory-units=gigabytes --disk-space-units=gigabytes --from-cron" >> "$temp_crontab"
 
     # Install new cron file using exported crontab file
 
