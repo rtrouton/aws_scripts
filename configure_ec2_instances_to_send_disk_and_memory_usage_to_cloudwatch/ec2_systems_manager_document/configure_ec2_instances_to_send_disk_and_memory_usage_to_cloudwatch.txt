@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "1.2",
+  "description": "Configures EC2 instances to forward disk and memory usage information to CloudWatch",
+  "parameters": {
+    "upgradeType":{
+      "type":"String",
+      "default": "",
+      "description":"This script configures EC2 instances to forward disk and memory usage information to CloudWatch."
+    }
+  },
+  "runtimeConfig": {
+    "aws:runShellScript": {
+      "properties": [
+        {
+          "id": "0.aws:runShellScript",
+          "runCommand": [
+            "#!/bin/bash",
+            "",
+            "# Download the AWS monitoring scripts",
+            "",
+            "wget http://aws-cloudwatch.s3.amazonaws.com/downloads/CloudWatchMonitoringScripts-1.2.1.zip",
+            "",
+            "# If the monitoring scripts were successfully downloaded, uncompress the scripts",
+            "# and stored them in /opt",
+            "",
+            "if [[ -f CloudWatchMonitoringScripts-1.2.1.zip ]]; then",
+            "",
+            "    # Uncompress files into /opt",
+            "",
+            "    unzip CloudWatchMonitoringScripts-1.2.1.zip -d /opt",
+            "",
+            "    # Install supporting Perl modules",
+            "",
+            "    yum -y install perl-Switch perl-DateTime perl-Sys-Syslog perl-LWP-Protocol-https perl-Digest-SHA",
+            "",
+            "    # Create root crontab entry to run memory and disk monitoring",
+            "",
+            "    temp_crontab=/tmp/crontab_export",
+            "",
+            "    # Remove any existing crontab export files",
+            "",
+            "    if [[ -f \"$temp_crontab\" ]]; then",
+            "       rm \"$temp_crontab\"",
+            "    fi",
+            "",
+            "    # Export existing crontab to crontab export file",
+            "",
+            "    /bin/crontab -l > \"$temp_crontab\"",
+            "",
+            "    # Export new crontab entry to exported crontab file",
+            "",
+            "    /bin/echo \"*/5 * * * * /opt/aws-scripts-mon/mon-put-instance-data.pl --mem-util --mem-used --mem-avail --swap-util --swap-used --disk-path=/ --disk-space-util --disk-space-used --disk-space-avail --from-cron\" >> \"$temp_crontab\"",
+            "",
+            "    # Install new cron file using exported crontab file",
+            "",
+            "    /bin/crontab \"$temp_crontab\"",
+            "",
+            "    # Remove exported crontab file",
+            "",
+            "    /bin/rm \"$temp_crontab\"",
+            "",
+            "    # Remove downloaded AWS monitoring scripts",
+            "",
+            "    rm CloudWatchMonitoringScripts-1.2.1.zip",
+            "fi"          ]
+        }
+      ]
+    }
+  }
+}
