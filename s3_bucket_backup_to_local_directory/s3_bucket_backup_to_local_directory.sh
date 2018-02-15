@@ -47,7 +47,7 @@ if [[ ! -d "$local_directory" ]]; then
 fi
 
 # Perform a one-way synchronization from the S3 bucket to the local backup directory, so that the
-# local backup directory only contains the the contents of the specified S3 bucket.
+# local backup directory only contains the contents of the specified S3 bucket.
 #
 # Once the S3 bucket's contents have been synchronized, all files and directories are set to be
 # world-readable. All output should be logged to /var/log/dp_sync.log.
