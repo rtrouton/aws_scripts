@@ -4,8 +4,8 @@ This script backs up the contents of a specified database hosted in Amazon Web S
 
 The script assumes the following:
 
-1. The AWS CLI tool and `mysqldump` have been installed.
-2. A MySQL connection has been created to provide authentication to the database.
+1. The AWS CLI tool, `gzip` and `mysqldump` have been installed.
+2. A [MySQL connection](https://dev.mysql.com/doc/refman/5.6/en/mysql-config-editor.html) has been created to provide authentication to the database.
 
 The script performs the following actions:
 
