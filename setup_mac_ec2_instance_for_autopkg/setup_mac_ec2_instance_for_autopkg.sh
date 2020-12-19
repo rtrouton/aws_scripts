@@ -106,6 +106,15 @@ autopkg_username="ec2-user"
 
 if [[ "$autopkg_username" = "ec2-user" ]] && [[ -n "$autopkg_userpassword" ]]; then
     /usr/bin/dscl . passwd /Users/"$autopkg_username" ${autopkg_userpassword}
+    /usr/bin/dscl . -authonly "$autopkg_username" ${autopkg_userpassword}
+    if [[ $? -eq 0 ]]; then
+  		password_set=1
+  		ScriptLogging "Password set correctly."
+  	else
+  		ScriptLogging "ERROR! Password change failed!"
+  		exitCode=1
+    fi
+
 fi
 
 # User Home Directory
@@ -131,7 +140,7 @@ ScriptLogging(){
 
 # Enable VNC
 
-if [[ "$enableVNC" = "yes" ]] && [[ -n "$autopkg_userpassword" ]]; then
+if [[ "$enableVNC" = "yes" ]] && [[ -n "$password_set" ]]; then
     /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart -activate -configure -access -on -restart -agent -privs -all
 fi
 
@@ -160,8 +169,8 @@ installCommandLineTools() {
     fi
     
     # Check to see if the softwareupdate tool has returned more than one Xcode
-    # command line tool installation option. If it has, use the last one listed
-    # as that should be the latest Xcode command line tool installer.
+    # CLT installation option. If it has, use the last one listed
+    # as that should be the latest Xcode CLT installer.
     
     if (( $(grep -c . <<<"$cmd_line_tools") > 1 )); then
        cmd_line_tools_output="$cmd_line_tools"
@@ -248,7 +257,24 @@ defaults_location="/usr/bin/defaults"
 jssimporter_location="/Library/AutoPkg/autopkglib/JSSImporter.py"
 plistbuddy_location="/usr/libexec/PlistBuddy"
 
-# Ensure the latest version of the Xcode command line tools are installed.
+# Resize boot drive to use all EBS disk space
+
+# Get APFS container ID
+
+apfs_container_id=$(/usr/sbin/diskutil list physical external | awk '/Apple_APFS/ {print $7}')
+
+# Resize APFS container to use all available space
+ScriptLogging "Resizing boot drive to use all available space."
+
+/usr/sbin/diskutil apfs resizeContainer "$apfs_container_id" 0  >> "$log_location" 2>&1
+if [[ $? -eq 0 ]]; then
+  	ScriptLogging "Drive resizing successful."
+else
+  	ScriptLogging "ERROR! Drive Resizing Failed!"
+  	exitCode=1
+fi
+
+# Ensure the latest version of the Xcode CLT are installed.
 
 installCommandLineTools
 
@@ -351,7 +377,7 @@ else
   echo "### Error! AutoPkg, AutoPkgr and JSSImporter not installed properly. For setup details, please see $log_location." >> "$log_location" 2>&1
 fi
 
-if [[ "$enableAutoLogin" = "yes" ]] && [[ -n "$autopkg_userpassword" ]]; then
+if [[ "$enableAutoLogin" = "yes" ]] && [[ -n "$password_set" ]]; then
    # Enabling automatic login of AWS ec2-user
    ScriptLogging "Enabling autologin of $autopkg_username account."
    sudo -u "$autopkg_username" /usr/local/bin/brew tap xfreebird/utils
