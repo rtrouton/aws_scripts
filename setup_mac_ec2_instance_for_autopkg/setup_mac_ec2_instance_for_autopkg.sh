@@ -145,7 +145,7 @@ if [[ "$enableVNC" = "yes" ]] && [[ -n "$password_set" ]]; then
 fi
 
 installCommandLineTools() {
-    echo "### Installing the latest Xcode command line tools..." >> "$log_location" 2>&1
+    echo "## Installing the latest Xcode command line tools..." >> "$log_location" 2>&1
     echo
     # Save current IFS state
     OLDIFS=$IFS
@@ -155,12 +155,11 @@ installCommandLineTools() {
     
     cmd_line_tools_temp_file="/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress"
     
-    # Create the placeholder file which is checked by the softwareupdate tool 
-    # before allowing the installation of the Xcode command line tools.
+    # Create file which enables Xcode CLT installation.
     
     touch "$cmd_line_tools_temp_file"
     
-    # Identify the correct update in the Software Update feed with "Command Line Tools" in the name for the OS version in question.
+    # Identify the correct Xcode CLT version to install.
     
     if [[ ( ${osvers_major} -eq 10 && ${osvers_minor} -ge 15 ) || ( ${osvers_major} -eq 11 && ${osvers_minor} -ge 0 ) ]]; then
        cmd_line_tools=$(softwareupdate -l | awk '/\*\ Label: Command Line Tools/ { $1=$1;print }' | sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 9-)	
@@ -168,20 +167,16 @@ installCommandLineTools() {
        cmd_line_tools=$(softwareupdate -l | awk '/\*\ Command Line Tools/ { $1=$1;print }' | grep "$macos_vers" | sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 2-)
     fi
     
-    # Check to see if the softwareupdate tool has returned more than one Xcode
-    # CLT installation option. If it has, use the last one listed
-    # as that should be the latest Xcode CLT installer.
-    
     if (( $(grep -c . <<<"$cmd_line_tools") > 1 )); then
        cmd_line_tools_output="$cmd_line_tools"
        cmd_line_tools=$(printf "$cmd_line_tools_output" | tail -1)
     fi
     
-    #Install the command line tools
+    #Install Xcode CLT
     
     softwareupdate -i "$cmd_line_tools" --verbose
     
-    # Remove the temp file
+    # Remove temp file
     
     if [[ -f "$cmd_line_tools_temp_file" ]]; then
       rm "$cmd_line_tools_temp_file"
@@ -190,7 +185,7 @@ installCommandLineTools() {
 
 installAutoPkg() {
 
-    # Install the latest release of AutoPkg
+    # Install latest AutoPkg
 
     autopkg_location_LATEST=$(/usr/bin/curl https://api.github.com/repos/autopkg/autopkg/releases/latest | awk '/browser_download_url/ {print $2}' | tr -d '"')
     /usr/bin/curl -L -s "${autopkg_location_LATEST}" -o "$autopkg_userhome/autopkg-latest.pkg" 2>&1 | tee -a "$log_location"
@@ -207,7 +202,7 @@ installAutoPkg() {
 
 installJSSImporter() { 
 
-    # Install the latest release of JSSImporter
+    # Install latest JSSImporter
 
     jssimporter_location_LATEST=$(/usr/bin/curl https://api.github.com/repos/jssimporter/JSSImporter/releases/latest | awk '/browser_download_url/ {print $2}' | tr -d '"')
     /usr/bin/curl -L -s "${jssimporter_location_LATEST}" -o "$autopkg_userhome/jssimporter-latest.pkg" 2>&1 | tee -a "$log_location"
@@ -224,9 +219,7 @@ installJSSImporter() {
 
 installAutoPkgr() { 
 
-    # Install the latest release of AutoPkgr by adding the
-    # homebysix-recipes AutoPkg recipe repo and installing AutoPkgr
-    # using the AutoPkgr.install recipe available from that repo.
+    # Install latest AutoPkgr
         
     sudo -u "$autopkg_username" "${autopkg_location}" repo-add homebysix-recipes >> "$log_location" 2>&1
     ScriptLogging "Installing AutoPkgr"
@@ -257,33 +250,16 @@ defaults_location="/usr/bin/defaults"
 jssimporter_location="/Library/AutoPkg/autopkglib/JSSImporter.py"
 plistbuddy_location="/usr/libexec/PlistBuddy"
 
-# Resize boot drive to use all EBS disk space
-
-# Get APFS container ID
-
-apfs_container_id=$(/usr/sbin/diskutil list physical external | awk '/Apple_APFS/ {print $7}')
-
-# Resize APFS container to use all available space
-ScriptLogging "Resizing boot drive to use all available space."
-
-/usr/sbin/diskutil apfs resizeContainer "$apfs_container_id" 0  >> "$log_location" 2>&1
-if [[ $? -eq 0 ]]; then
-  	ScriptLogging "Drive resizing successful."
-else
-  	ScriptLogging "ERROR! Drive Resizing Failed!"
-  	exitCode=1
-fi
-
-# Ensure the latest version of the Xcode CLT are installed.
+# Install latest Xcode CLT
 
 installCommandLineTools
 
-# Ensure that Homebrew is up to date
+# Update to latest Homebrew
 
 sudo -u "$autopkg_username" "${brew_location}" update >> "$log_location" 2>&1
 sudo -u "$autopkg_username" "${brew_location}" upgrade >> "$log_location" 2>&1
 
-# Get AutoPkg if not already installed
+# Install AutoPkg if needed
 if [[ ! -x ${autopkg_location} ]]; then
     installAutoPkg
     # Clean up if necessary.
@@ -295,7 +271,7 @@ else
     ScriptLogging "AutoPkg installed"
 fi
 
-# Check for JSSImporter and install if needed
+# Install JSSImporter if needed
 
 if [[ ! -x "$jssimporter_location" ]]; then
     installJSSImporter
@@ -308,7 +284,7 @@ else
     ScriptLogging "JSSImporter installed"
 fi
 
-# Check for AutoPkgr and install if needed
+# Install AutoPkgr if needed
 
 if [[ ! -x "$autopkgr_location" ]]; then
     installAutoPkgr
@@ -335,17 +311,13 @@ if [[ -x ${autopkg_location} ]] && [[ -x ${autopkgr_location} ]] && [[ -x ${jssi
 
   ScriptLogging "AutoPkg Repos Configured"
 
-  # Configure JSSImporter with the following information:
-  #
-  # Jamf Pro address
-  # Jamf Pro API account username
-  # Jamf Pro API account username
+# Configure JSSImporter with Jamf Pro address and API credentials
 
   sudo -u "$autopkg_username" ${defaults_location} write ${autopkg_prefs} JSS_URL "${jamfproURL}" >> "$log_location" 2>&1
   sudo -u "$autopkg_username" ${defaults_location} write ${autopkg_prefs} API_USERNAME "${apiUser}" >> "$log_location" 2>&1
   sudo -u "$autopkg_username" ${defaults_location} write ${autopkg_prefs} API_PASSWORD "${apiPass}" >> "$log_location" 2>&1
 
-  # Remove any existing Jamf Pro distribution point settings
+  # Remove existing Jamf Pro distribution point settings
 
   sudo -u "$autopkg_username" ${plistbuddy_location} -c "Delete :JSS_REPOS array" ${autopkg_prefs} >> "$log_location" 2>&1 
   
@@ -393,4 +365,32 @@ if [[ "$enableAutoLogin" = "yes" ]] && [[ -n "$password_set" ]]; then
        fi
    fi
 fi
-exit "$exitCode"
+
+# Resize boot drive to use all EBS disk space
+# Repair physical disk
+
+yes | /usr/sbin/diskutil repairDisk $(/usr/sbin/diskutil info / | awk '/APFS Physical Store/ {print substr ($4,1,5)}')  >> "$log_location" 2>&1
+if [[ $? -eq 0 ]]; then
+  	ScriptLogging "Drive repair successful."
+else
+  	ScriptLogging "ERROR! Drive Repair Failed!"
+  	exitCode=1
+fi
+
+# Resize APFS container to use all available space
+ScriptLogging "Resizing boot drive to use all available space."
+
+/usr/sbin/diskutil apfs resizeContainer $(/usr/sbin/diskutil info / | awk '/APFS Physical Store/ {print $4}') 0  >> "$log_location" 2>&1
+if [[ $? -eq 0 ]]; then
+  	ScriptLogging "Drive resizing successful."
+else
+  	ScriptLogging "ERROR! Drive Resizing Failed!"
+  	exitCode=1
+fi
+
+if [[ "$exitCode" = 0 ]]; then
+   ScriptLogging "Setup completed successfully. For details, please see $log_location."
+else
+   ScriptLogging "Error! Something went wrong, please see $log_location."
+   exit "$exitCode"
+fi
