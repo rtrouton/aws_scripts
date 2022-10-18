@@ -163,7 +163,11 @@ echo "$bucketpolicyJSON" > "$bucketpolicyJSON_file"
 
 # Create the S3 bucket.
 
-aws s3api create-bucket --bucket ${s3_bucket_name} --region ${s3_bucket_region} --create-bucket-configuration LocationConstraint=${s3_bucket_region} 2>&1 > /dev/null
+if [[ ${s3_bucket_region} = "us-east-1" ]]; then
+    aws s3api create-bucket --bucket ${s3_bucket_name} --region ${s3_bucket_region} 2>&1 > /dev/null
+else
+    aws s3api create-bucket --bucket ${s3_bucket_name} --region ${s3_bucket_region} --create-bucket-configuration LocationConstraint=${s3_bucket_region} 2>&1 > /dev/null
+fi 
 
 # Set permissions on the newly-created S3 bucket so that no public access is permitted.
 
