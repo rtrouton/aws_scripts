@@ -38,6 +38,8 @@ echo ""
 read -p "Please enter the name of the new S3 bucket: " s3_bucket_name
 read -p "Please enter the AWS region that the new S3 bucket should be created in: " s3_bucket_region
 
+# Convert upper-case letters to lower case letters as needed.
+
 s3_bucket_name=$(echo "$s3_bucket_name"| tr '[:upper:]' '[:lower:]')
 
 redirectionJSON_file=$(mktemp)
