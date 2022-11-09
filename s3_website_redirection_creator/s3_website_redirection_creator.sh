@@ -44,6 +44,10 @@ read -p "Please enter the name of the new S3 bucket: " s3_bucket_name
 read -p "Please enter the AWS region that the new S3 bucket should be created in: " s3_bucket_region
 read -p "Please enter the website address you want to redirect to : " website_url
 
+# Convert upper-case letters to lower case letters as needed.
+
+s3_bucket_name=$(echo "$s3_bucket_name"| tr '[:upper:]' '[:lower:]')
+
 # Figure out if an HTTP or HTTPS URL is being used.
 
 http_protocol=${website_url%://*}
