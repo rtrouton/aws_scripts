@@ -34,7 +34,6 @@ echo "You will need to enter the following information:"
 echo ""
 echo "A. The name of the new S3 bucket."
 echo "B. The Amazon Web Services region that you want to create the S3 bucket in."
-echo "C. The address of the website address you want to redirect to."
 echo ""
 read -p "Please enter the name of the new S3 bucket: " s3_bucket_name
 read -p "Please enter the AWS region that the new S3 bucket should be created in: " s3_bucket_region
