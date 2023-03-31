@@ -29,7 +29,7 @@
 exitCode=0
 
 clear
-echo "This script sets up S3 buckets in Amazon Web Services for website redirection."
+echo "This script sets up S3 buckets in Amazon Web Services."
 echo "You will need to enter the following information:"
 echo ""
 echo "A. The name of the new S3 bucket."
